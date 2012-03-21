@@ -7,29 +7,73 @@ import java.io.InputStream;
 import java.io.InputStreamReader;
 import java.util.ArrayList;
 import java.util.LinkedList;
+import java.util.concurrent.Semaphore;
 
 
-public class Commodity {
+public class Commodity extends Thread{
+	
+	Thread thread;
+	Semaphore readingSem;
+	Semaphore parsingSem;
+	
+	String filename;
+	
+	FileInputStream fis = null;
+	DataInputStream dis = null;
+	BufferedReader reader = null;
 	
 	public ArrayList<Tick> lol = new ArrayList<Tick>();
 
-	public Commodity(){
+	public Commodity(String name,String filename){
 		
-	    InputStream inZemiaky = null;
+		super(name);
+		
+		this.filename = filename;
+		this.readingSem = readingSem;
+		this.parsingSem = parsingSem;
+		
+//		thread = new Thread(name);
+		
 		try {
-			inZemiaky = new FileInputStream("ZEMIAKY_20110515_20110700.txt");
-		    DataInputStream inzemiaky  = new DataInputStream(inZemiaky);
-		    BufferedReader rZemiaky  = new BufferedReader(new InputStreamReader(inzemiaky ));
-		    rZemiaky.readLine();
-		    for (int i = 0; i < 8000000; i ++){
-		    	lol.add(new Tick(rZemiaky.readLine()));
+			fis = new FileInputStream(this.filename);		
+		    dis  = new DataInputStream(fis);
+		    reader = new BufferedReader(new InputStreamReader(dis));
+		    reader.readLine();
+		} catch (IOException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		}
+		
+		System.out.println("constructing commodity");
+		
+//		thread.start();
+	}
+	
+	@Override
+	public void run(){
+		System.out.println("running");
+		
+		int total = 0;
+		
+		try {
+			
+			Tick inTick = new Tick();
+			
+		    for (int i = 0; i < 8000; i ++){
+		    	//lol.add(new Tick(reader.readLine()));
+		    	if(inTick.set(reader.readLine()) == true) total++;
 		    }
 
-		    System.out.print("size: " + lol.size());
+//		    System.out.print("size: " + lol.size());
+		    System.out.println(filename+" "+total);
+		    
+		    fis.close();
 		    
 		} catch (IOException e) {
 			e.printStackTrace();
 		}
+		
+		
 	}
 	
 }
