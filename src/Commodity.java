@@ -1,38 +1,33 @@
 import java.io.BufferedReader;
 import java.io.DataInputStream;
 import java.io.FileInputStream;
-import java.io.FileNotFoundException;
 import java.io.IOException;
-import java.io.InputStream;
 import java.io.InputStreamReader;
-import java.util.ArrayList;
-import java.util.LinkedList;
-import java.util.concurrent.Semaphore;
 
 
 public class Commodity extends Thread{
 	
-	Thread thread;
-	Semaphore readingSem;
-	Semaphore parsingSem;
+	Synchronizer sync;
 	
+	String name;
 	String filename;
 	
 	FileInputStream fis = null;
 	DataInputStream dis = null;
 	BufferedReader reader = null;
 	
-	public ArrayList<Tick> lol = new ArrayList<Tick>();
+	Tick inTick;
 
-	public Commodity(String name,String filename){
+	public Commodity(String name,String filename,Synchronizer sync) throws InterruptedException{
 		
 		super(name);
 		
+		this.name = name;
 		this.filename = filename;
-		this.readingSem = readingSem;
-		this.parsingSem = parsingSem;
+		this.sync = sync;
+		this.inTick = new Tick();
 		
-//		thread = new Thread(name);
+//		sync.parsingSem.acquire();
 		
 		try {
 			fis = new FileInputStream(this.filename);		
@@ -44,36 +39,75 @@ public class Commodity extends Thread{
 			e.printStackTrace();
 		}
 		
-		System.out.println("constructing commodity");
+	}
+	
+	public void lock() throws InterruptedException{
+		sync.readingSem.acquire();
+		sync.parsingSem.release();
+	}
+	
+	public void release() throws InterruptedException{
+		sync.readingSem.release();
+		sync.parsingSem.acquire();
+	}
+	
+	public void synchronize() throws InterruptedException, IOException{
+		int skip = 0;
+		while(inTick.time.compareTo(sync.time) < 0){
+			inTick.set(reader.readLine());
+			skip++;
+		}
 		
-//		thread.start();
+		Thread.sleep(200);
+		
+		System.out.println(filename+" skipped: "+skip);
 	}
 	
 	@Override
 	public void run(){
-		System.out.println("running");
 		
 		int total = 0;
 		
+		System.out.println("running");
+		
 		try {
+			this.lock();
 			
-			Tick inTick = new Tick();
+			System.out.println("reading first line");
+			inTick.set(reader.readLine());
 			
-		    for (int i = 0; i < 8000; i ++){
-		    	//lol.add(new Tick(reader.readLine()));
-		    	if(inTick.set(reader.readLine()) == true) total++;
+//			System.out.println(name+": "+inTick.time);
+			
+			this.release();
+			// MAIN Thread working
+			this.lock();
+			
+			this.synchronize();
+			
+		    this.release();
+		    // MAIN Thread working
+		    this.lock();
+		    
+		    total = 0;
+		    for(int i=0;i<8000;i++){
+		    	if(inTick.set(reader.readLine())) total++;
 		    }
-
-//		    System.out.print("size: " + lol.size());
-		    System.out.println(filename+" "+total);
+		    
+		    System.out.println(filename+" read: "+total);
+		    
+//		    this.release();
+//		    // MAIN Thread working
+//		    this.lock();
 		    
 		    fis.close();
+		    System.out.println(name+" finished");
+		    
 		    
 		} catch (IOException e) {
 			e.printStackTrace();
+		} catch(InterruptedException ie){
+			ie.printStackTrace();
 		}
-		
-		
 	}
 	
 }
