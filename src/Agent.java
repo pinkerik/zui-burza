@@ -1,4 +1,5 @@
 import java.io.IOException;
+import java.util.Calendar;
 import java.util.Date;
 
 
@@ -82,8 +83,27 @@ public class Agent {
 			e.printStackTrace();
 		}
 		
-		System.out.println("main finished");
+		// MAIN LOOP START
+		for(int j=0;j<3;j++){
+			System.out.println("---------------- "+j+" ----------------");
+			sync.add(Calendar.HOUR,1);
+			this.release();
+			
+			
+			
+			this.lock();
+		}
+		// MAIN LOOP END
+		
+		sync.end = true;
+		Thread.sleep(200);
 		
 		this.release();
+		
+		Thread.sleep(200);
+		
+		
+		
+		System.out.println("main finished");
 	}
 }

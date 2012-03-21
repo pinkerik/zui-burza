@@ -58,7 +58,7 @@ public class Commodity extends Thread{
 			skip++;
 		}
 		
-		Thread.sleep(200);
+//		Thread.sleep(200);
 		
 		System.out.println(filename+" skipped: "+skip);
 	}
@@ -75,6 +75,7 @@ public class Commodity extends Thread{
 			
 			System.out.println("reading first line");
 			inTick.set(reader.readLine());
+//			Thread.sleep(200);
 			
 //			System.out.println(name+": "+inTick.time);
 			
@@ -86,18 +87,28 @@ public class Commodity extends Thread{
 			
 		    this.release();
 		    // MAIN Thread working
-		    this.lock();
 		    
-		    total = 0;
-		    for(int i=0;i<8000;i++){
-		    	if(inTick.set(reader.readLine())) total++;
+		    // MAIN LOOP START
+		    while(true){
+		    	this.lock();
+		    	if(sync.end == true){
+		    		System.out.println("breaking out");
+		    		break;
+		    	}
+		    	
+		    	
+				    
+		    	total = 0;
+		    	while(inTick.time.compareTo(sync.time) < 0){
+		    		if(inTick.set(reader.readLine())) total++;
+		    	}
+
+		    	System.out.println(filename+" read: "+total);
+		    	this.release();
 		    }
+		    // MAIN LOOP END
+		   
 		    
-		    System.out.println(filename+" read: "+total);
-		    
-//		    this.release();
-//		    // MAIN Thread working
-//		    this.lock();
 		    
 		    fis.close();
 		    System.out.println(name+" finished");
