@@ -11,8 +11,8 @@ public class Tick {
 	int quantity;
 	
 	public static final int BID = 0;
-	public static final int ASK = 0;
-	public static final int TRADE = 0;
+	public static final int ASK = 1;
+	public static final int TRADE = 2;
 	
 	DateFormat df = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss");
 	String[] tline;

@@ -8,8 +8,11 @@ public class Agent {
 	String[] files;
 	int c;
 	
+	
 	Commodity commodities[];
 	Synchronizer sync;
+	
+	Observation O;
 	
 	public Agent(String[] files){
 		this.files = files;
@@ -17,6 +20,8 @@ public class Agent {
 		
 		commodities = new Commodity[c];
 		sync = new Synchronizer(c);
+		
+		O = new Observation("ASK");
 	}
 	
 	public void lock() throws InterruptedException{
@@ -40,7 +45,8 @@ public class Agent {
 		
 		int i = 0;
 		for(String filename : files){
-			commodities[i] = new Commodity(filename.substring(0,filename.indexOf('_')),filename,sync);
+			/// ta 40 je tam preto lebo ja tam mam cestu, zmen si to na 0; Mozno to treba nejak inak vyriesit
+			commodities[i] = new Commodity(filename.substring(40,filename.indexOf('_')),filename,sync,O);
 			commodities[i].start();
 			i++;
 		}
@@ -84,15 +90,17 @@ public class Agent {
 		}
 		
 		// MAIN LOOP START
-		for(int j=0;j<3;j++){
+		for(int j=0;j<60480;j++){ // 3 dni = 25920, 7 dni = 60480
 			System.out.println("---------------- "+j+" ----------------");
-			sync.add(Calendar.HOUR,1);
+			sync.add(Calendar.SECOND,10);
 			this.release();
 			
 			
 			
 			this.lock();
+			O.Refresh();
 		}
+		O.Out();
 		// MAIN LOOP END
 		
 		sync.end = true;

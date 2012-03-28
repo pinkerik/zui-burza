@@ -1,3 +1,4 @@
+
 import java.io.BufferedReader;
 import java.io.DataInputStream;
 import java.io.FileInputStream;
@@ -17,8 +18,10 @@ public class Commodity extends Thread{
 	BufferedReader reader = null;
 	
 	Tick inTick;
+	
+	Observation observer;
 
-	public Commodity(String name,String filename,Synchronizer sync) throws InterruptedException{
+	public Commodity(String name,String filename,Synchronizer sync, Observation O) throws InterruptedException{
 		
 		super(name);
 		
@@ -26,6 +29,7 @@ public class Commodity extends Thread{
 		this.filename = filename;
 		this.sync = sync;
 		this.inTick = new Tick();
+		this.observer = O;
 		
 //		sync.parsingSem.acquire();
 		
@@ -99,11 +103,22 @@ public class Commodity extends Thread{
 		    	
 				    
 		    	total = 0;
+		    	observer.NewPeriod(name);
 		    	while(inTick.time.compareTo(sync.time) < 0){
-		    		if(inTick.set(reader.readLine())) total++;
-		    	}
+		    		if(inTick.set(reader.readLine())){
+		    			total++;
+		    			//spracovanie pomocou Observation
+		    			observer.AddTick(inTick,name);
 
-		    	System.out.println(filename+" read: "+total);
+		    		
+		    			//koniec spracovanie pomocou Observation
+		    		}
+		    	}
+		    	if (total != 0 ){
+		    		observer.StopPeriod(name,total);
+		    	}
+		    	
+		    	//System.out.println(filename+" read: "+total);
 		    	this.release();
 		    }
 		    // MAIN LOOP END
@@ -111,7 +126,7 @@ public class Commodity extends Thread{
 		    
 		    
 		    fis.close();
-		    System.out.println(name+" finished");
+		    //System.out.println(name+" finished");
 		    
 		    
 		} catch (IOException e) {

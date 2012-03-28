@@ -29,7 +29,7 @@ public class Synchronizer {
 				cal.add(field,1);
 				break;
 			default:
-				cal.add(Calendar.HOUR,1);
+				cal.add(Calendar.SECOND,10);
 		}
 		time = cal.getTime();
 	}
