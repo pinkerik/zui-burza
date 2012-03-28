@@ -90,7 +90,7 @@ public class Agent {
 		}
 		
 		// MAIN LOOP START
-		for(int j=0;j<60480;j++){ // 3 dni = 25920, 7 dni = 60480
+		for(int j=0;j<(60480*5);j++){ // 3 dni = 25920, 7 dni = 60480
 			System.out.println("---------------- "+j+" ----------------");
 			sync.add(Calendar.SECOND,10);
 			this.release();
