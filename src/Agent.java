@@ -1,6 +1,5 @@
 import java.io.IOException;
 import java.util.Calendar;
-import java.util.Date;
 
 
 public class Agent {
@@ -11,12 +10,18 @@ public class Agent {
 	Commodity commodities[];
 	Synchronizer sync;
 	
+	Analyzer analyzer;
+	
+	long startTime,totalTime;
+	
 	public Agent(String[] files){
 		this.files = files;
 		c = this.files.length;
 		
 		commodities = new Commodity[c];
 		sync = new Synchronizer(c);
+		
+		
 	}
 	
 	public void lock() throws InterruptedException{
@@ -29,7 +34,13 @@ public class Agent {
 		sync.parsingSem.acquire(c);
 	}
 	
+	public boolean threadsWorking(){
+		for(Commodity c : commodities) if(c.finished()) return false;
+		return true;
+	}
+	
 	public void start() throws InterruptedException{
+		startTime = System.currentTimeMillis();
 		
 //		ArrayList<Commodity> commodities = new ArrayList<Commodity>(5);
 		
@@ -45,11 +56,13 @@ public class Agent {
 			i++;
 		}
 		
+		analyzer = new Analyzer(commodities);	// DONT MOVE IT FROM HERE
+		
 		
 		this.release();
 		// Threads working
 	
-		System.out.println("threads are running");
+		System.out.println("Releasing threads");
 		
 		this.lock();
 		
@@ -61,39 +74,50 @@ public class Agent {
 		
 		System.out.println("max date is: "+sync.time);
 		
-		System.out.print("press Enter");
-		try {
-			System.in.read();
-		} catch (IOException e) {
-			// TODO Auto-generated catch block
-			e.printStackTrace();
-		}
+//		System.out.print("press Enter");
+//		try {
+//			System.in.read();
+//		} catch (IOException e) {
+//			e.printStackTrace();
+//		}
 		
 		this.release();
 		
-		System.out.println("threads are working again");
+		System.out.println("Threads are synchronizing");
 		
 		this.lock();
 		
-		System.out.print("press Enter");
-		try {
-			System.in.read();
-		} catch (IOException e) {
-			// TODO Auto-generated catch block
-			e.printStackTrace();
-		}
+//		System.out.print("press Enter");
+//		try {
+//			System.in.read();
+//		} catch (IOException e) {
+//			// TODO Auto-generated catch block
+//			e.printStackTrace();
+//		}
 		
 		// MAIN LOOP START
-		for(int j=0;j<3;j++){
-			System.out.println("---------------- "+j+" ----------------");
-			sync.add(Calendar.HOUR,1);
+		int j = 0;
+		while(threadsWorking()){
+			if(j > 1000) break;
+			j++;
+//			System.out.println("---------------- "+j+" ----------------");
+			sync.add(Calendar.SECOND,20);
+//			sync.add(Calendar.MINUTE,1);
 			this.release();
 			
 			
 			
 			this.lock();
+			
+//			System.out.println(commodities[0].name+" BID change: "+Commodity.SChanges[commodities[0].priceChange]);
+//			System.out.println(commodities[1].name+" BID change: "+Commodity.SChanges[commodities[1].priceChange]);
+			
+			if(j==1) continue;
+			analyzer.iteration();
 		}
 		// MAIN LOOP END
+		
+		analyzer.finish();
 		
 		sync.end = true;
 		Thread.sleep(200);
@@ -102,8 +126,8 @@ public class Agent {
 		
 		Thread.sleep(200);
 		
+		totalTime = System.currentTimeMillis() - startTime;
 		
-		
-		System.out.println("main finished");
+		System.out.println("main finished in "+totalTime+" millis");
 	}
 }

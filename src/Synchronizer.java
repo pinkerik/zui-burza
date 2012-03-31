@@ -22,9 +22,10 @@ public class Synchronizer {
 	public void add(int field,int amount){
 		cal.setTime(time);
 		switch(field){
+			case Calendar.SECOND:
 			case Calendar.MINUTE:
 			case Calendar.HOUR:
-			case Calendar.DAY_OF_MONTH:
+			case Calendar.DAY_OF_YEAR:
 			case Calendar.WEEK_OF_YEAR:
 				cal.add(field,1);
 				break;

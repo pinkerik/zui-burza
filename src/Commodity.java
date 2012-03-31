@@ -7,6 +7,16 @@ import java.io.InputStreamReader;
 
 public class Commodity extends Thread{
 	
+	public static final String path = "/home/tomas/";
+	
+	public static final float MAXVAL = Float.MAX_VALUE / 10;
+	
+	public static final String[] SChanges = {"raise","lower","same"};
+	public static final char[] CChanges = {'+','-','='};
+	public static final int RAISE = 0;
+	public static final int LOWER = 1;
+	public static final int SAME = 2;
+	
 	Synchronizer sync;
 	
 	String name;
@@ -17,6 +27,14 @@ public class Commodity extends Thread{
 	BufferedReader reader = null;
 	
 	Tick inTick;
+	String inLine;
+	
+	boolean imFinished;
+	
+	static final int tickType = Tick.BID;
+	float average,lastAverage;
+	int total;
+	int priceChange;
 
 	public Commodity(String name,String filename,Synchronizer sync) throws InterruptedException{
 		
@@ -27,10 +45,14 @@ public class Commodity extends Thread{
 		this.sync = sync;
 		this.inTick = new Tick();
 		
+		this.imFinished = false;
+		
+		lastAverage = 0;
+		
 //		sync.parsingSem.acquire();
 		
 		try {
-			fis = new FileInputStream(this.filename);		
+			fis = new FileInputStream(path+this.filename);		
 		    dis  = new DataInputStream(fis);
 		    reader = new BufferedReader(new InputStreamReader(dis));
 		    reader.readLine();
@@ -51,7 +73,11 @@ public class Commodity extends Thread{
 		sync.parsingSem.acquire();
 	}
 	
-	public void synchronize() throws InterruptedException, IOException{
+	public boolean finished(){
+		return imFinished;
+	}
+	
+	private void synchronize() throws InterruptedException, IOException{
 		int skip = 0;
 		while(inTick.time.compareTo(sync.time) < 0){
 			inTick.set(reader.readLine());
@@ -63,17 +89,33 @@ public class Commodity extends Thread{
 		System.out.println(filename+" skipped: "+skip);
 	}
 	
+	private void averageTick(){
+		if(inTick.type == tickType){
+			average += inTick.price;
+			total++;
+//			if(average > MAXVAL){
+//				average /= total;
+//				total = 0;
+//				System.out.println("Rotating");
+//			}
+		}
+	}
+	
+	private void compareChange(){
+		if(total == 0) average = lastAverage;
+		else average /= total;
+		
+    	if(average > lastAverage) priceChange = RAISE;
+    	else if(average < lastAverage) priceChange = LOWER;
+    	else priceChange = SAME;
+    	lastAverage = average;
+	}
+	
 	@Override
 	public void run(){
 		
-		int total = 0;
-		
-		System.out.println("running");
-		
 		try {
 			this.lock();
-			
-			System.out.println("reading first line");
 			inTick.set(reader.readLine());
 //			Thread.sleep(200);
 			
@@ -91,19 +133,24 @@ public class Commodity extends Thread{
 		    // MAIN LOOP START
 		    while(true){
 		    	this.lock();
-		    	if(sync.end == true){
-		    		System.out.println("breaking out");
-		    		break;
-		    	}
+		    	if(sync.end == true) break;
 		    	
 		    	
-				    
-		    	total = 0;
+		    	average = total = 0;
 		    	while(inTick.time.compareTo(sync.time) < 0){
-		    		if(inTick.set(reader.readLine())) total++;
+		    		averageTick();
+		    		
+		    		inLine = reader.readLine();
+		    		if(inLine != null){
+		    			inTick.set(inLine);
+		    		}else{
+		    			imFinished = true;
+		    			break;
+		    		}
 		    	}
+		    	
+		    	compareChange();
 
-		    	System.out.println(filename+" read: "+total);
 		    	this.release();
 		    }
 		    // MAIN LOOP END
