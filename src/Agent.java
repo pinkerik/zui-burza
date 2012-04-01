@@ -1,4 +1,3 @@
-import java.io.IOException;
 import java.util.Calendar;
 
 
@@ -42,10 +41,6 @@ public class Agent {
 	public void start() throws InterruptedException{
 		startTime = System.currentTimeMillis();
 		
-//		ArrayList<Commodity> commodities = new ArrayList<Commodity>(5);
-		
-		
-		
 		sync.readingSem.acquire(c);
 		sync.parsingSem.acquire(c);
 		
@@ -68,18 +63,10 @@ public class Agent {
 		
 		// Looking for max time .. to synchronize all commodities
 		for(Commodity c : commodities){
-			System.out.println(c.name+": "+c.inTick.time);
 			if(sync.time == null || sync.time.compareTo(c.inTick.time) < 0) sync.time = c.inTick.time;
 		}
 		
 		System.out.println("max date is: "+sync.time);
-		
-//		System.out.print("press Enter");
-//		try {
-//			System.in.read();
-//		} catch (IOException e) {
-//			e.printStackTrace();
-//		}
 		
 		this.release();
 		
@@ -87,20 +74,12 @@ public class Agent {
 		
 		this.lock();
 		
-//		System.out.print("press Enter");
-//		try {
-//			System.in.read();
-//		} catch (IOException e) {
-//			// TODO Auto-generated catch block
-//			e.printStackTrace();
-//		}
 		
 		// MAIN LOOP START
 		int j = 0;
 		while(threadsWorking()){
-			if(j > 1000) break;
+//			if(j > 1000) break;
 			j++;
-//			System.out.println("---------------- "+j+" ----------------");
 			sync.add(Calendar.SECOND,20);
 //			sync.add(Calendar.MINUTE,1);
 			this.release();
@@ -108,9 +87,6 @@ public class Agent {
 			
 			
 			this.lock();
-			
-//			System.out.println(commodities[0].name+" BID change: "+Commodity.SChanges[commodities[0].priceChange]);
-//			System.out.println(commodities[1].name+" BID change: "+Commodity.SChanges[commodities[1].priceChange]);
 			
 			if(j==1) continue;
 			analyzer.iteration();

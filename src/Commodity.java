@@ -49,8 +49,6 @@ public class Commodity extends Thread{
 		
 		lastAverage = 0;
 		
-//		sync.parsingSem.acquire();
-		
 		try {
 			fis = new FileInputStream(path+this.filename);		
 		    dis  = new DataInputStream(fis);
@@ -93,11 +91,6 @@ public class Commodity extends Thread{
 		if(inTick.type == tickType){
 			average += inTick.price;
 			total++;
-//			if(average > MAXVAL){
-//				average /= total;
-//				total = 0;
-//				System.out.println("Rotating");
-//			}
 		}
 	}
 	
@@ -117,9 +110,6 @@ public class Commodity extends Thread{
 		try {
 			this.lock();
 			inTick.set(reader.readLine());
-//			Thread.sleep(200);
-			
-//			System.out.println(name+": "+inTick.time);
 			
 			this.release();
 			// MAIN Thread working
