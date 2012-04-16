@@ -33,7 +33,7 @@ public class Commodity extends Thread{
 	
 	static final int tickType = Tick.BID;
 	float average,lastAverage;
-	int total;
+	float total;
 	int priceChange;
 
 	public Commodity(String name,String filename,Synchronizer sync) throws InterruptedException{
@@ -55,7 +55,6 @@ public class Commodity extends Thread{
 		    reader = new BufferedReader(new InputStreamReader(dis));
 		    reader.readLine();
 		} catch (IOException e) {
-			// TODO Auto-generated catch block
 			e.printStackTrace();
 		}
 		

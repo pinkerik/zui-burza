@@ -39,6 +39,7 @@ public class Agent {
 	}
 	
 	public void start() throws InterruptedException{
+		
 		startTime = System.currentTimeMillis();
 		
 		sync.readingSem.acquire(c);
@@ -66,6 +67,9 @@ public class Agent {
 			if(sync.time == null || sync.time.compareTo(c.inTick.time) < 0) sync.time = c.inTick.time;
 		}
 		
+		System.out.println(sync.cal.get(Calendar.DAY_OF_WEEK));
+		System.out.println(sync.cal.toString());
+		
 		System.out.println("max date is: "+sync.time);
 		
 		this.release();
@@ -80,7 +84,8 @@ public class Agent {
 		while(threadsWorking()){
 //			if(j > 1000) break;
 			j++;
-			sync.add(Calendar.SECOND,20);
+			if(j % 2 == 1) sync.add(Calendar.SECOND,20);
+			else sync.add(Calendar.SECOND,1);
 //			sync.add(Calendar.MINUTE,1);
 			this.release();
 			
@@ -89,7 +94,8 @@ public class Agent {
 			this.lock();
 			
 			if(j==1) continue;
-			analyzer.iteration();
+			
+			if(j % 2 != 1) analyzer.iteration();
 		}
 		// MAIN LOOP END
 		
